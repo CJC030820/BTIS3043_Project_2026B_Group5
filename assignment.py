@@ -80,6 +80,11 @@ def solve_a_star(start_state):
     nodes_expanded = 0
     while pq:
         f, g, _, current, path = heapq.heappop(pq)
+        
+        # Skip stale nodes if a shorter path to 'current' was already processed
+        if g > visited.get(current, g):
+            continue
+            
         nodes_expanded += 1
         if current == GOAL_STATE:
             runtime_ms = (time.perf_counter() - start_time) * 1000
@@ -93,3 +98,25 @@ def solve_a_star(start_state):
                 f_val = new_g + manhattan_distance(neighbor)
                 heapq.heappush(pq, (f_val, new_g, counter, neighbor, path + [neighbor]))
     return None, nodes_expanded, len(visited), (time.perf_counter() - start_time) * 1000
+
+# --- EXPERIMENTAL TEST BENCHMARK ---
+test_cases = [
+    {"id": "TC01", "diff": "Easy",   "board": (1, 2, 3, 4, 5, 6, 7, 0, 8)},
+    {"id": "TC02", "diff": "Easy",   "board": (1, 2, 3, 4, 5, 6, 0, 7, 8)},
+    {"id": "TC03", "diff": "Easy",   "board": (1, 2, 3, 0, 4, 6, 7, 5, 8)},
+    {"id": "TC04", "diff": "Medium", "board": (1, 2, 3, 4, 0, 5, 7, 8, 6)},
+    {"id": "TC05", "diff": "Medium", "board": (1, 2, 3, 5, 0, 6, 4, 7, 8)},
+    {"id": "TC06", "diff": "Medium", "board": (1, 3, 6, 4, 2, 0, 7, 5, 8)},
+    {"id": "TC07", "diff": "Medium", "board": (4, 1, 3, 0, 2, 6, 7, 5, 8)},
+    {"id": "TC08", "diff": "Hard",   "board": (1, 6, 2, 5, 3, 0, 4, 7, 8)},
+    {"id": "TC09", "diff": "Hard",   "board": (2, 8, 3, 1, 6, 4, 7, 0, 5)},
+    {"id": "TC10", "diff": "Hard",   "board": (5, 1, 3, 4, 0, 2, 7, 6, 8)}
+]
+
+if __name__ == "__main__":
+    for tc in test_cases:
+        b_len, b_nodes, b_vis, b_time = solve_bfs(tc["board"])
+        g_len, g_nodes, g_vis, g_time = solve_greedy(tc["board"])
+        a_len, a_nodes, a_vis, a_time = solve_a_star(tc["board"])
+        print(f"{tc['id']} ({tc['diff']}): BFS={b_len}s/{b_nodes}n/{b_time:.2f}ms | "
+              f"Greedy={g_len}s/{g_nodes}n/{g_time:.2f}ms | A*={a_len}s/{a_nodes}n/{a_time:.2f}ms")
